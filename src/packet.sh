@@ -30,15 +30,17 @@ function pkt_chunk() {
 
 	chunk="ffff" # amount of blocks, doesnt matter
 	chunk+="08"   # palette - bits per block
+	#chunk+="04"   # palette - bits per block
 	chunk+="$(int2varint ${#palette[@]})" # palette - entries amount
+	#chunk+="04"
 
 	chunk+="${palette[@]}"
-	#res+="0f af0b 01 00"
+	#chunk+="0f af0b 01 00"
 
-	chunk+="8002" # len of next array
+	chunk+="8004" # len of next array
 	l=$(echo -n "8002" | xxd -p -r | varint2int)
 
-	for (( i=0; i<$((l*8)); i++ )); do
+	for (( i=0; i<$((l*16)); i++ )); do
 		chunk+="01" # third entry of palette
 	done
 
@@ -47,8 +49,11 @@ function pkt_chunk() {
 		chunk+="0000000000000001" # set biome
 	done
 
-	res+="$(int2varint $(hexstr_len "$chunk"))" # Data len
+	warn $(hexstr_len "$chunk")
+	res+="$(hexstr_len "$chunk")" # Data len
 	res+="$chunk" # Chunk data itself
+
+	rhexlog "$res"
 
 	res+="00 01 00 00 00 00 00 00" # empty bitsets and light arrays
 
