@@ -12,6 +12,11 @@ source src/int.sh
 source src/packet.sh
 source src/hooks.sh
 
+if [[ -f "$1" ]]; then
+	log "Loading plugin: $1"
+	source "$1"
+fi
+
 function keep_alive() {
 	while true; do
 		sleep 5
