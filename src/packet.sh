@@ -15,11 +15,18 @@ function pkt_pos() {
 		log "sent player look and position"
 }
 
+# pkt_chunk(chunk_x, chunk_z, fill)
 function pkt_chunk() {
 	# palettes are really cool once you figure them out :3
 	# https://wiki.vg/Protocol#Chunk_Data_And_Update_Light
 	
 	local chunk
+	local fill
+	if [[ $3 == '' ]]; then
+		fill='01'
+	else
+		fill="$3"
+	fi
 
 	res="$1" # chunk X
 	res+="$2" # chunk Z
@@ -31,26 +38,14 @@ function pkt_chunk() {
 	if [[ -f $TEMP/world/$1$2 ]]; then
 		chunk=$(cat $TEMP/world/$1$2)
 	else
-		chunk="ffff" # amount of blocks, doesnt matter
-		chunk+="08"   # palette - bits per block
-		#chunk+="04"   # palette - bits per block
-		chunk+="$(int2varint ${#palette[@]})" # palette - entries amount
-		#chunk+="04"
-
-		chunk+="${palette[@]}"
-		#chunk+="0f af0b 01 00"
-
+		chunk_header
+		
 		chunk+="8004" # len of next array
 		l=$(echo -n "8002" | xxd -p -r | varint2int)
 
-		for (( i=0; i<$((l*16)); i++ )); do
-			chunk+="01" # third entry of palette
-		done
+		chunk+="$(repeat $((l*16)) "$fill")"
 
-		chunk+="0001" # biome palette
-		for i in {1..26}; do
-			chunk+="0000000000000001" # set biome
-		done
+		chunk_footer
 		echo -n "$chunk" > $TEMP/world/$1$2
 	fi
 
@@ -74,11 +69,31 @@ function pkt_effect() {
 	log "sending effect"
 }
 
+# pkt_particle(x, y, z, particle_id, count)
+function pkt_particle() {
+	res="$(printf '%08x' $4)" # particle id
+	res+="01" # long distance
+	res+="0000000000000000" # X
+	res+="0000000000000000" # Y
+	res+="0000000000000000" # Z
+	res+="3f800000" # X offset
+	res+="3f800000" # Y offset
+	res+="3f800000" # Z offset
+	res+="00000001" # particle data
+	res+="$(printf '%08x' $5)" # particle count
+	res+="" # data (left blank)
+	echo -n "$(hexpacket_len "$res")24$res" | xxd -p -r
+
+	
+	rhexlog "$res"
+	log "sending particle"
+}
+
 # pkt_playerinfo(name, eid)
 function pkt_playerinfo_add() {
 	res="00" # add player
 	res+="01" # total players
-	res+="0000000000000000000000000000$2" # random UUID
+	res+="0000000000000000000000000000$2" # UUID
 
 	res+="$(str_len "$1")$(echo -n "$1" | xxd -p)"
 	

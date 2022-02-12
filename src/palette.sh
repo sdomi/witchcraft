@@ -8,7 +8,7 @@ palette=()
 
 palette+=("00") # air
 palette+=("01") # stone
-palette+=("09") # grass
+palette+=("09") # grass block
 palette+=("0a") # dirt
 palette+=("0e") # cobblestone
 palette+=("0f") # planks
@@ -37,4 +37,4 @@ palette+=("00") #
 palette+=("00") #
 palette+=("00") #
 palette+=("00") #
-palette+=("f60a") # grass
+palette+=("f60a") # tallgrass

@@ -9,6 +9,9 @@ mkdir -p $TEMP $TEMP/players $TEMP/world
 
 source src/log.sh
 source src/int.sh
+source src/misc.sh
+source src/palette.sh
+source src/chunk.sh
 source src/packet.sh
 source src/hooks.sh
 
@@ -22,6 +25,7 @@ function keep_alive() {
 		sleep 5
 		log "sending keepalive"
 		echo '092100000000000000ff' | xxd -p -r
+		# random data
 	done
 }
 
@@ -97,7 +101,7 @@ while true; do
 		log "connection dyed"
 		pkill -P $$
 		pkt_chatmessage "- $nick" "00000000000000000000000000000000" > $TEMP/players/$nick/broadcast
-		sleep 1
+		sleep 0.3
 		rm -R "$TEMP/players/$nick"
 		exit
 	fi
@@ -130,7 +134,7 @@ while true; do
 			state=''
 		elif [[ "$state" == '02' ]]; then
 			nick=$(cut -c 5- <<< "$a" | xxd -p -r | grep -Poh '[A-Za-z0-9_-]*')
-			eid=$(printf "%02x" $RANDOM)
+			eid=$(printf "%04x" $RANDOM | cut -c 1-4)
 			mkdir -p $TEMP/players/$nick
 			echo -n $eid > $TEMP/players/$nick/eid
 			pkt_chatmessage "+ $nick" "00000000000000000000000000000000" > $TEMP/players/$nick/broadcast
@@ -189,13 +193,10 @@ while true; do
 			echo -n "$(hexpacket_len "$res")14$res" | xxd -p -r
 			log "sent inventory"
 
-			pkt_pos
-
-			source src/palette.sh
-			
 			hook_chunks
-
+			pkt_pos
 			spawn_players
+
 			
 			state=''
 		else
@@ -222,10 +223,14 @@ while true; do
 		echo "${pos[0]},${pos[1]},${pos[2]}" > $TEMP/players/$nick/position
 		hook_move
 	elif [[ $a == "12"* ]]; then
+		pos[0]=$(from_ieee754 $(cut -c 3-18 <<< "$a"))
+		pos[1]=$(from_ieee754 $(cut -c 19-34 <<< "$a"))
+		pos[2]=$(from_ieee754 $(cut -c 35-50 <<< "$a"))
 		hook_move
 	elif [[ $a == "13"* ]]; then
-		hook_move
+		log "received Player Rotation"
 	elif [[ $a == "1a"* ]]; then
+		#cut -c 3-
 		hook_dig
 	elif [[ $a == "2c"* ]]; then
 		hook_swing

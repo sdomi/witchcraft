@@ -43,9 +43,9 @@ function varint2int() {
 	echo -n "$out"
 }
 
-# parse_position(Position)
+# decode_position(Position)
 # https://wiki.vg/Protocol#Position
-function parse_position() {
+function decode_position() {
 	x=$((0x$1 >> 38))
 	y=$((0x$1 & 0xFFF))
 	z=$(((0x$1 >> 12) & 0x3FFFFFF))
