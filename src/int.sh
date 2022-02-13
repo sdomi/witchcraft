@@ -99,6 +99,7 @@ function hex2bin() {
 }
 
 # from_ieee754(hexstring)
+# this works only on ints
 function from_ieee754() {
 	local sign
 	local exponent
@@ -127,6 +128,46 @@ function from_ieee754() {
 		echo "$asdf $exponent_" | awk '{print (int($1 * (2 ** ($2 - 1023))))}'
 	else
 		echo "$asdf $exponent_" | awk '{print -(int($1 * (2 ** ($2 - 1023))))}'
+	fi
+}
+
+# to_ieee754(number)
+# this works only on ints
+function to_ieee754() {
+	local n
+	local m
+	local i
+	local sign
+	local mantissa
+	
+	n=$1
+	m=2
+	i=0
+	sign=0
+	
+	if [[ $n -lt 0 ]]; then
+		n=$((n-2*n))
+		sign=1
+	fi
+	
+	while true; do
+		if [[ $n -lt $((m*2)) ]]; then
+			break
+		fi
+		i=$((i+1))
+		m=$((m*2))
+	done
+	
+	mantissa=$(printf "1%010d" $(hex2bin $(printf "%x" $i)))
+	
+	# leading zeroes kept screwing me over, I'm hardcoding 1 and -1
+	if [[ $n == -1 ]]; then
+		printf "bff0000000000000"
+	elif [[ $n == 1 ]]; then
+		printf "3ff0000000000000"
+	else
+		res=$sign$mantissa$(printf "%0$((i+1))d" $(hex2bin $(printf "%x" $((n-m))) | sed -E 's/^0*//'))
+		printf "%x" $((2#$res$(repeat $((64-$(echo -n $res | wc -c))) 0)))
 	fi
 }
 

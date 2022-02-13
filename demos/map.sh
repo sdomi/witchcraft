@@ -25,3 +25,7 @@ function hook_chunks() {
 	pkt_chunk 00000001 00000000
 	pkt_chunk 00000001 00000001
 }
+
+function hook_block() {
+	
+}
