@@ -157,8 +157,12 @@ function to_ieee754() {
 		i=$((i+1))
 		m=$((m*2))
 	done
+
+	# we need to lie and tell Bash that this string is decimal, even though it's binary
+	# otherwise, it will interpret this as octal
 	
-	mantissa=$(printf "1%010d" $(hex2bin $(printf "%x" $i)))
+	# shh, nobody tell Bash
+	mantissa=$(printf "1%010d" $((10#$(hex2bin $(printf "%x" $i)))))
 	
 	# leading zeroes kept screwing me over, I'm hardcoding 1 and -1
 	if [[ $n == -1 ]]; then
