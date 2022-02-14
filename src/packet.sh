@@ -211,6 +211,14 @@ function pkt_title() {
 	echo -n "$(hexpacket_len "$res")5a$res" | xxd -p -r
 }
 
+# pkt_subtitle(msg)
+function pkt_subtitle() {
+	local txt
+	txt='{"text":"'"$1"'"}'
+	res="$(str_len "$txt")$(echo -n "$txt" | xxd -p)"
+	echo -n "$(hexpacket_len "$res")58$res" | xxd -p -r
+}
+
 # pkt_disconnect(reason)
 function pkt_disconnect() {
 	txt='{"text":"'"$1"'"}'

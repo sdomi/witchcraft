@@ -28,11 +28,11 @@ function keep_alive() {
 		echo '092100000000000000ff' | xxd -p -r
 		# random data
 
-		res=$(printf '%016x' $time)
-		res=$res$res
-		log time: $res
-		time=$((time+240))
-		echo -n "$(hexpacket_len "$res")59$res" | xxd -p -r
+		#res=$(printf '%016x' $time)
+		#res=$res$res
+		#log time: $res
+		#time=$((time+240))
+		#echo -n "$(hexpacket_len "$res")59$res" | xxd -p -r
 	done
 }
 
@@ -138,30 +138,37 @@ while true; do
 			log "$(hexpacket_len "$res")02$res"
 			echo -n "$(hexpacket_len "$res")02$res" | xxd -p -r
 
-			#res="$eid" 			# entity id
-			#res+="00" 				# not hardcore
-			#res+="00" 				# survival mode
-			#res+="01" 				# ... as previously seen on Creative Mode (ignored)
+			res="0000$eid" 			# entity id
+			res+="00" 				# not hardcore
+			res+="00" 				# survival mode
+			res+="01" 				# ... as previously seen on Creative Mode (ignored)
+
+			# I am *not* recreating the biome codecs
+			res+="$(cat src/biome_blob.nbt | xxd -p)
+			"
 			#res+="01" 				# one dimension
 			#res+="13$(echo -n "minecraft:overworld" | xxd -p)"
 			#res+="0a000000"				# dimension codec
 			#res+="0a000000"				# dimension
 			#res+="13$(echo -n "minecraft:overworld" | xxd -p)"	# dimension being spawned into
 			#res+="0000000000000000"	# beginning of sha256 of seed
-			#res+="0f"				# max players (ignored)
-			#res+="02"				# view distance (min 2 chunks)
-			#res+="02"				# simulation distance
-			#res+="00"				# reduced debug info? (false)
-			#res+="00"				# enable respawn screen
-			#res+="00"				# is debug (surprisingly, no)
-			#res+="01"				# is flat (yeah, sure)
+			#res+="00"				# max players (ignored)
+			res+="0a"				# view distance (min 2 chunks)
+			res+="0a"				# simulation distance
+			res+="00"				# reduced debug info? (false)
+			res+="00"				# enable respawn screen
+			res+="00"				# is debug (surprisingly, no)
+			res+="01"				# is flat (yeah, sure)
 
 			#rhexlog "$(hexpacket_len "$res")26$res"
 			#echo -n "$(hexpacket_len "$res")26$res" | xxd -p -r
 			#log "sent join game"
 
-			cat nbt_
-			log "sent (hardcoded) join game"			
+			
+			log "$(echo $(hexpacket_len "$res")26$res | cut -c 1-5000)"
+
+			echo -n "$(hexpacket_len "$res")26$res" | xxd -p -r
+			log "sent join game"			
 			#res="$(encode_position 10 10 10)"
 			#res+="00000000" # angle as float
 
