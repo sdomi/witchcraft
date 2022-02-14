@@ -5,6 +5,7 @@
 time_left=30
 score=0
 spawn_pos=(8 -40 8)
+gamemode=00
 
 # palette expanded for easier randomization
 palette+=("45")			# gold

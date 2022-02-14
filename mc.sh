@@ -4,7 +4,6 @@ dyed=0
 keepalive=0
 pos=(0 0 0)
 players=()
-time=1609000
 TEMP=/dev/shm/witchcraft/
 mkdir -p $TEMP $TEMP/players $TEMP/world
 
@@ -140,7 +139,7 @@ while true; do
 
 			res="0000$eid" 			# entity id
 			res+="00" 				# not hardcore
-			res+="00" 				# survival mode
+			res+="$gamemode"		# survival mode
 			res+="01" 				# ... as previously seen on Creative Mode (ignored)
 
 			# I am *not* recreating the biome codecs

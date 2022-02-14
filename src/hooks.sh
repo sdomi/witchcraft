@@ -2,6 +2,7 @@
 # hooks.sh - dummy hooks functions
 
 spawn_pos=(0 0 0) # default spawn position
+gamemode=01 # creative
 
 # on player dig
 function hook_dig() {
