@@ -88,6 +88,9 @@ function timer() {
 			sleep 10
 			time_left=$((time_left-10))
 		fi
+		if [[ ! -a $TEMP/players/$nick ]]; then # die if disconnected
+			break
+		fi
 		pkt_chatmessage "§aTime left: §r${time_left}s" "00000000000000000000000000000000"
 	done
 	pkt_disconnect "Time's up! Your final score: §a$(cat $TEMP/players/$nick/score)"
@@ -118,18 +121,21 @@ function score() {
 }
 
 function dig_async() {
-	if [[ $block == 01 ]]; then
-		d=0.03
-	else
+	if [[ $block == 01 || $block == 02 || $block == 03 ]]; then # stone, granite...
+		d=0.015
+	elif [[ $block == 9a8b01 || $block == 49 ]]; then # copper, coal
+		d=0.04
+	else # everything else
 		d=0.07
 	fi
 	for i in {1..9}; do
-		pkt_blockbreak $x $y $z 0$i
-		sleep $d
 		if [[ $(cat $TEMP/players/$nick/mining) != "$x,$y,$z" ]]; then
 			pkt_blockbreak $x $y $z ff
 			break
+		else
+			pkt_blockbreak $x $y $z 0$i
 		fi
+		sleep $d
 	done
 
 	if [[ $(cat $TEMP/players/$nick/mining) == "$x,$y,$z" ]]; then

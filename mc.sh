@@ -4,6 +4,7 @@ dyed=0
 keepalive=0
 pos=(0 0 0)
 players=()
+time=18000
 TEMP=/dev/shm/witchcraft/
 mkdir -p $TEMP $TEMP/players $TEMP/world
 
@@ -137,7 +138,7 @@ while true; do
 			log "$(hexpacket_len "$res")02$res"
 			echo -n "$(hexpacket_len "$res")02$res" | xxd -p -r
 
-			res="0000$eid" 			# entity id
+			res="0100$eid" 			# entity id
 			res+="00" 				# not hardcore
 			res+="$gamemode"		# survival mode
 			res+="01" 				# ... as previously seen on Creative Mode (ignored)
@@ -163,8 +164,6 @@ while true; do
 			#echo -n "$(hexpacket_len "$res")26$res" | xxd -p -r
 			#log "sent join game"
 
-			
-			log "$(echo $(hexpacket_len "$res")26$res | cut -c 1-5000)"
 
 			echo -n "$(hexpacket_len "$res")26$res" | xxd -p -r
 			log "sent join game"			
