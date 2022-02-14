@@ -164,11 +164,13 @@ function to_ieee754() {
 	# shh, nobody tell Bash
 	mantissa=$(printf "1%010d" $((10#$(hex2bin $(printf "%x" $i)))))
 	
-	# leading zeroes kept screwing me over, I'm hardcoding 1 and -1
+	# leading zeroes kept screwing me over, I'm hardcoding 1 and -1.. and 0
 	if [[ $n == -1 ]]; then
 		printf "bff0000000000000"
 	elif [[ $n == 1 ]]; then
 		printf "3ff0000000000000"
+	elif [[ $n == 0 ]]; then
+		printf "0000000000000000"
 	else
 		res=$sign$mantissa$(printf "%0$((i+1))d" $(hex2bin $(printf "%x" $((n-m))) | sed -E 's/^0*//'))
 		printf "%x" $((2#$res$(repeat $((64-$(echo -n $res | wc -c))) 0)))
