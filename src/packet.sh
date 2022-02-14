@@ -84,9 +84,6 @@ function pkt_particle() {
 	res+="" # data (left blank)
 	echo -n "$(hexpacket_len "$res")24$res" | xxd -p -r
 
-	log $(to_ieee754 $1) $(to_ieee754 $2) $(to_ieee754 $3)
-	
-	rhexlog "$res"
 	log "sending particle"
 }
 
@@ -121,7 +118,6 @@ function pkt_spawnplayer() {
 	res+="00" # Pitch (...)
 
 	echo -n "$(hexpacket_len "$res")04$res" | xxd -p -r
-	rhexlog "$(hexpacket_len "$res")04$res"
 	log "sent spawnplayer"
 }
 
@@ -223,7 +219,6 @@ function pkt_subtitle() {
 function pkt_disconnect() {
 	txt='{"text":"'"$1"'"}'
 	res="$(str_len "$txt")$(echo -n "$txt" | xxd -p)"
-	log "$txt"
 	echo -n "$(hexpacket_len "$res")1a$res" | xxd -p -r
 	
 	pkill -P $$

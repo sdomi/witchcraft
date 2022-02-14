@@ -16,7 +16,6 @@ spawn_pos=(8 -63 5)
 gamemode=00
 
 function hook_chunks() {
-	log "hooking chunks"
 
 	if [[ $nick != 'selfisekai' && $nick != 'MaeIsBadAtDev' && $nick != 'Domi_UwU' ]]; then
 		pkt_disconnect "§asomething something hmu if you wanna go in"
@@ -45,22 +44,8 @@ ________________'
 	mmmap="$(echo -n "$mmm" | chunkfix | sed -E 's/\./25/g;s/#/02/g;s/,/27/g;s/_/00/g;s/@/26/g;s/\^/28/g')"
 	chunk_header
 
-	#chunk+="$mmmap"
-	#for (( j=0; j<15; j++ )); do
-	#	for (( i=0; i<256; i++ )); do
-	#		chunk+="$(printf '%02x' 00)"
-	#	done
-	#done
-
 	for (( y=0; y<16; y++ )); do
 		if [[ $y == 0 ]]; then
-			#for (( x=0; x<16; x++ )); do
-			#	if [[ $x == 8 ]]; then
-			#		chunk+="08"
-			#	else
-			#		chunk+="02"
-			#	fi
-			#done
 			chunk+="$(repeat 256 "02")"
 		elif [[ $y == 1 ]]; then
 			for (( i=0; i<$((256-16)); i++ )); do
@@ -75,7 +60,6 @@ ________________'
 			for (( x=0; x<16; x++ )); do
 				if [[ $x == 15 ]]; then
 					chunk+="$(echo -n "$mmmap" | tail -n $((y+1)) | head -n1)"
-					log "Y: $y, X: $x, $(echo -n "$mmmap" | tail -n $y | head -n1)"
 				else
 					for (( z=0; z<16; z++ )); do
 						chunk+="00"
@@ -85,14 +69,10 @@ ________________'
 		fi
 	done
 
-	#for (( i=0; i<256; i++ )); do
-	#	chunk+="00"
-	#done
 
 	chunk_footer
 
 	echo "$chunk" > $TEMP/world/0000000000000000
-	#log "$chunk"
 
 	chunk_header
 	chunk+="$(repeat 256 "02")"
@@ -163,7 +143,6 @@ function async_particles() {
 function hook_swing() {
 	pkt_particle 4 -60 12 33 128
 	pkt_particle 12 -60 12 33 128
-	log "received Arm Swing"
 }
 
 function hook_ping() {
@@ -184,14 +163,6 @@ function hook_start() {
 		sleep 2
 		pkt_title "Thanks for being awesome ^^"
 		pkt_subtitle "I love you <3"
-	elif [[ $nick == "Domi_UwU" ]]; then
-		pkt_title "§ddomi §cDEBUG"
-		sleep 2
-		pkt_title "Thanks for being here for me ^^"
-		pkt_subtitle "You mean a lot to me <3"
-		pkt_subtitle uwu
-		pkt_subtitle uwu
-		pkt_subtitle uwu
 	fi
 	async_particles &
 }

@@ -41,9 +41,6 @@ function position_delta() {
 	local deltaY
 	local deltaZ
 
-#	pos[0]=0
-#	pos[1]=0
-#	pos[2]=0
 	pos_old[0]=0
 	pos_old[1]=0
 	pos_old[2]=0
@@ -135,7 +132,6 @@ while true; do
 
 				# random uuid						string len		string (nick)
 			res="0000000000000000000000000000$eid$(str_len "$nick")$(echo -n "$nick" | xxd -p)"
-			log "$(hexpacket_len "$res")02$res"
 			echo -n "$(hexpacket_len "$res")02$res" | xxd -p -r
 
 			res="0100$eid" 			# entity id
@@ -159,10 +155,6 @@ while true; do
 			res+="00"				# enable respawn screen
 			res+="00"				# is debug (surprisingly, no)
 			res+="01"				# is flat (yeah, sure)
-
-			#rhexlog "$(hexpacket_len "$res")26$res"
-			#echo -n "$(hexpacket_len "$res")26$res" | xxd -p -r
-			#log "sent join game"
 
 
 			echo -n "$(hexpacket_len "$res")26$res" | xxd -p -r

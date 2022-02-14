@@ -26,7 +26,6 @@ function hook_chunks() {
 	local ore
 	local plane
 	
-	log "hooking chunks"
 	rm -R $TEMP/world/*
 	chunk_header
 
@@ -145,10 +144,6 @@ function dig_async() {
 }
 
 function hook_dig() {
-	log $x
-	log $y
-	log $z
-	log $a
 	ore=$(cat $TEMP/players/$nick/oremap | awk '{print $'"$((y+64))"'}' | sed -E 's/.{32}/&\n/g' | head -n $((z+1)) | tail -n 1 | sed -E 's/(.{16})(.{16})/\2\1/g;s/.{2}/&\n/g' | tail -n $((x+2)) | head -n1)
 	block=${palette[$((0x$ore))]}
 	if [[ $a == "1a02"* ]]; then # finished digging?
@@ -182,6 +177,5 @@ function hook_ping() {
 function hook_inventory() {
 	items=($(repeat 36 "0 "))
 	items+=("721")
-	log ${items[1]}
 	pkt_inventory items
 }
