@@ -4,6 +4,7 @@ dyed=0
 keepalive=0
 pos=(0 0 0)
 players=()
+time=1609000
 TEMP=/dev/shm/witchcraft/
 mkdir -p $TEMP $TEMP/players $TEMP/world
 
@@ -22,10 +23,16 @@ fi
 
 function keep_alive() {
 	while true; do
-		sleep 5
+		sleep 1
 		log "sending keepalive"
 		echo '092100000000000000ff' | xxd -p -r
 		# random data
+
+		res=$(printf '%016x' $time)
+		res=$res$res
+		log time: $res
+		time=$((time+240))
+		echo -n "$(hexpacket_len "$res")59$res" | xxd -p -r
 	done
 }
 
@@ -106,30 +113,13 @@ while true; do
 		exit
 	fi
 
-	if [[ -f /tmp/block ]]; then
-		res="$(encode_position 10 -10 10)"
-		res+="01"
-
-		log "$res"
-		echo -n "$(hexpacket_len "$res")0c$res" | xxd -p -r
-		rm -R /tmp/block
-	fi
-
-	if [[ -f /tmp/spawn ]]; then
-		spawn_players
-		rm /tmp/spawn
-	fi
-
 	if [[ $a == "00"* ]]; then
 		log "responding to 00; state: $state"
 
 		if [[ "$state" == '01' ]]; then
 			log "status response"
 
-			#json='{"version":{"name":"1.18.1","protocol":757},"players":{"max":100,"online":5,"sample":[{"name":"uwu","id":"4566e69f-c907-48ee-8d71-d7ba5aa00d20"}]},"description":{"text":"Hello world"}}'
-			json='{"version":{"name":"§a§kaaa§aUwU§kaaa","protocol":756},"players":{"max":1,"online":0,"sample":[]},"description":{"text":"§aUwU"},"favicon":"data:image/png;base64,'"$(base64 -w0 icon.png)"'"}'
-			res="$(str_len "$json")$(echo -n "$json" | xxd -p)"
-			echo "$(hexpacket_len "$res")00$res" | xxd -p -r
+			hook_ping
 
 			state=''
 		elif [[ "$state" == '02' ]]; then
@@ -137,7 +127,6 @@ while true; do
 			eid=$(printf "%04x" $RANDOM | cut -c 1-4)
 			mkdir -p $TEMP/players/$nick
 			echo -n $eid > $TEMP/players/$nick/eid
-			pkt_chatmessage "+ $nick" "00000000000000000000000000000000" > $TEMP/players/$nick/broadcast
 			log "login response"
 			if [[ $keepalive == 0 ]]; then
 				hook_keepalive
@@ -149,14 +138,7 @@ while true; do
 			log "$(hexpacket_len "$res")02$res"
 			echo -n "$(hexpacket_len "$res")02$res" | xxd -p -r
 
-			
-			res="$(encode_position 0 0 0)"
-			res+="00000000" # angle as float
-
-			echo -n "$(hexpacket_len "$res")4B$res" | xxd -p -r
-			log "sent spawn position"
-
-			#res="00000000" 			# entity id (0 or -2147483648, idk)
+			#res="$eid" 			# entity id
 			#res+="00" 				# not hardcore
 			#res+="00" 				# survival mode
 			#res+="01" 				# ... as previously seen on Creative Mode (ignored)
@@ -179,25 +161,19 @@ while true; do
 			#log "sent join game"
 
 			cat nbt_
-			log "sent (hardcoded) join game"
-			
-			# send inventory (0x14)
-			res="00" # inventory id
-			res+="00" # state
-			res+="09" # item count
-			for i in {1..9}; do
-				res+="01 0$i 7f 00" # stone block
-			done
-			res+="01 00 01 00" # again, for held
+			log "sent (hardcoded) join game"			
+			#res="$(encode_position 10 10 10)"
+			#res+="00000000" # angle as float
 
-			echo -n "$(hexpacket_len "$res")14$res" | xxd -p -r
-			log "sent inventory"
+			#echo -n "$(hexpacket_len "$res")4B$res" | xxd -p -r
+			#log "sent spawn position"
 
+			hook_inventory
 			hook_chunks
-			pkt_pos
+			pkt_pos ${spawn_pos[0]} ${spawn_pos[1]} ${spawn_pos[2]}
 			spawn_players
 
-			
+			(sleep 1; hook_start) &
 			state=''
 		else
 			if [[ $a == *"01" ]]; then # 01 - next state: status
@@ -230,7 +206,7 @@ while true; do
 	elif [[ $a == "13"* ]]; then
 		log "received Player Rotation"
 	elif [[ $a == "1a"* ]]; then
-		#cut -c 3-
+		decode_position $(cut -c 5-20 <<< "$a")
 		hook_dig
 	elif [[ $a == "2c"* ]]; then
 		hook_swing

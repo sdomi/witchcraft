@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # packet.sh - play state packets
 
+# pkt_pos(x, y, z)
 function pkt_pos() {
-		res="0000001000000000"	# X
-		res+="0000000000000000"	# Y
-		res+="0000000000000000"	# Z
+		res="$(to_ieee754 $1)"	# X
+		res+="$(to_ieee754 $2)"	# Y
+		res+="$(to_ieee754 $3)"	# Z
 		res+="00000000"			# yaw
 		res+="00000000"			# pitch
 		res+="00"				# bit field; all absolute
@@ -40,7 +41,6 @@ function pkt_chunk() {
 	else
 		chunk_header
 		
-		chunk+="8004" # len of next array
 		l=$(echo -n "8002" | xxd -p -r | varint2int)
 
 		chunk+="$(repeat $((l*16)) "$fill")"
@@ -73,9 +73,9 @@ function pkt_effect() {
 function pkt_particle() {
 	res="$(printf '%08x' $4)" # particle id
 	res+="01" # long distance
-	res+="0000000000000000" # X
-	res+="0000000000000000" # Y
-	res+="0000000000000000" # Z
+	res+="$(to_ieee754 $1)" # X
+	res+="$(to_ieee754 $2)" # Y
+	res+="$(to_ieee754 $3)" # Z
 	res+="3f800000" # X offset
 	res+="3f800000" # Y offset
 	res+="3f800000" # Z offset
@@ -84,6 +84,7 @@ function pkt_particle() {
 	res+="" # data (left blank)
 	echo -n "$(hexpacket_len "$res")24$res" | xxd -p -r
 
+	log $(to_ieee754 $1) $(to_ieee754 $2) $(to_ieee754 $3)
 	
 	rhexlog "$res"
 	log "sending particle"
@@ -208,4 +209,87 @@ function pkt_title() {
 	txt='{"text":"'"$1"'"}'
 	res="$(str_len "$txt")$(echo -n "$txt" | xxd -p)"
 	echo -n "$(hexpacket_len "$res")5a$res" | xxd -p -r
+}
+
+# pkt_disconnect(reason)
+function pkt_disconnect() {
+	txt='{"text":"'"$1"'"}'
+	res="$(str_len "$txt")$(echo -n "$txt" | xxd -p)"
+	log "$txt"
+	echo -n "$(hexpacket_len "$res")1a$res" | xxd -p -r
+	
+	pkill -P $$
+	pkt_chatmessage "- $nick" "00000000000000000000000000000000" > $TEMP/players/$nick/broadcast
+	sleep 0.3
+	rm -R "$TEMP/players/$nick"
+	exit
+}
+
+# pkt_experience(lvl)
+function pkt_experience() {
+	res="00000000" # experience bar
+	res+="$(int2varint $1)"
+	res+="00"
+	echo -n "$(hexpacket_len "$res")51$res" | xxd -p -r
+}
+
+# pkt_inventory(items)
+function pkt_inventory() {
+	local -n _items=$1
+	
+	res="00" # inventory id
+	res+="00" # state
+	res+="$(int2varint ${#_items[@]})" # item count
+	for i in ${!_items[@]}; do
+		if [[ $i == 0 ]]; then
+			res+="00"
+		else
+			res+="01 $(int2varint ${_items[$i]}) 01 00"
+		fi
+	done
+	res+="01 00 01 00"
+
+	echo -n "$(hexpacket_len "$res")14$res" | xxd -p -r
+	log "sent inventory"
+}
+
+# pkt_digginack(x, y, z, block, status)
+function pkt_diggingack() {
+	res="$(encode_position $1 $2 $3)"
+	res+="$4"
+	res+="$5"
+	res+="01"
+	echo -n "$(hexpacket_len "$res")08$res" | xxd -p -r
+	log "sent dig ack"
+}
+
+# pkt_blockbreak(x, y, z, stage)
+function pkt_blockbreak() {
+	res="$(int2varint $((0x$eid)))"
+	res+="$(encode_position $1 $2 $3)"
+	res+="$4"
+	echo -n "$(hexpacket_len "$res")09$res" | xxd -p -r
+}
+
+# pkt_soundeffect(x, y, z, id)
+# TODO: unbreak this
+function pkt_soundeffect() {
+	res="$(int2varint $4)" # sound ID
+	res+="05" # "block" category
+	res+="$(printf '%08x' $(($1*8)))" # x
+	res+="$(printf '%08x' $(($2*8)))" # y
+	res+="$(printf '%08x' $(($3*8)))" # z
+	res+="3f800000" # volume
+	res+="3f800000" # pitch
+
+	echo -n "$(hexpacket_len "$res")5d$res" | xxd -p -r
+	log "sound $(hexpacket_len "$res")5d$res"
+}
+
+# pkt_sendblock(x, y, z, id)
+function pkt_sendblock() {
+	res="$(encode_position $1 $2 $3)"
+	res+="$(int2varint $4)"
+	
+	echo -n "$(hexpacket_len "$res")0c$res" | xxd -p -r
 }

@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # hooks.sh - dummy hooks functions
 
+spawn_pos=(0 0 0) # default spawn position
+
 # on player dig
 function hook_dig() {
 	log "received Player Dig"
@@ -51,10 +53,30 @@ function hook_chunks() {
 	pkt_chunk 00000001 00000002
 }
 
+# after spawning the player
+function hook_start() {
+	:
+}
+
 # during login; useful for disabling all multiplayer functionality
 function hook_keepalive() {
 	keep_alive &
 	# sleep probably only needed for testing
 	sleep 1 && position_delta &
 	sleep 1 && handle_broadcast &
+	pkt_chatmessage "+ $nick" "00000000000000000000000000000000" > $TEMP/players/$nick/broadcast
+}
+
+# during server ping; allows you to respond with a custom message.
+function hook_ping() {
+	#json='{"version":{"name":"1.18.1","protocol":757},"players":{"max":100,"online":5,"sample":[{"name":"uwu","id":"4566e69f-c907-48ee-8d71-d7ba5aa00d20"}]},"description":{"text":"Hello world"}}'
+	json='{"version":{"name":"§a§kaaa§aUwU§kaaa","protocol":756},"players":{"max":1,"online":0,"sample":[]},"description":{"text":"§aUwU"},"favicon":"data:image/png;base64,'"$(base64 -w0 icon.png)"'"}'
+	res="$(str_len "$json")$(echo -n "$json" | xxd -p)"
+	echo "$(hexpacket_len "$res")00$res" | xxd -p -r
+}
+
+# on defining inventory contents
+function hook_inventory() {
+	items=()
+	pkt_inventory items
 }

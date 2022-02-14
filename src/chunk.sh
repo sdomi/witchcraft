@@ -7,6 +7,8 @@ function chunk_header() {
 	chunk+="$(int2varint ${#palette[@]})" # palette - entries amount
 
 	chunk+="${palette[@]}"
+
+	chunk+="8004" # len of next array
 }
 
 function chunk_footer() {
