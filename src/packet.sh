@@ -12,7 +12,7 @@ function pkt_pos() {
 		res+="00"				# teleport id (?)
 		res+="00"				# dismount vehicle?
 
-		echo -n "$(hexpacket_len "$res")38$res" | xxd -p -r
+		send_packet "38" "$res"
 		log "sent player look and position"
 }
 
@@ -41,7 +41,7 @@ function pkt_chunk() {
 	else
 		chunk_header
 		
-		l=$(echo -n "8002" | xxd -p -r | varint2int)
+		l=$(echo -n "8002" | unhex | varint2int)
 
 		chunk+="$(repeat $((l*16)) "$fill")"
 
@@ -54,7 +54,7 @@ function pkt_chunk() {
 
 	res+="00 01 00 00 00 00 00 00" # empty bitsets and light arrays
 
-	echo -n "$(hexpacket_len "$res")22$res" | xxd -p -r
+	send_packet "22" "$res"
 	
 	log "sending chunk data"
 }
@@ -65,7 +65,7 @@ function pkt_effect() {
 	res+="$(encode_position $1 $2 $3)"
 	res+="00000000"
 	res+="00"
-	echo -n "$(hexpacket_len "$res")23$res" | xxd -p -r
+	send_packet "23" "$res"
 	log "sending effect"
 }
 
@@ -82,7 +82,7 @@ function pkt_particle() {
 	res+="00000001" # particle data
 	res+="$(printf '%08x' $5)" # particle count
 	res+="" # data (left blank)
-	echo -n "$(hexpacket_len "$res")24$res" | xxd -p -r
+	send_packet "24" "$res"
 
 	log "sending particle"
 }
@@ -101,7 +101,7 @@ function pkt_playerinfo_add() {
 	res+="01" # ping: 1ms
 	res+="00" # has display name: false
 
-	echo -n "$(hexpacket_len "$res")36$res" | xxd -p -r
+	send_packet "36" "$res"
 	
 	log "sent playerinfo"
 }
@@ -117,7 +117,7 @@ function pkt_spawnplayer() {
 	res+="00" # Angle (256 steps)
 	res+="00" # Pitch (...)
 
-	echo -n "$(hexpacket_len "$res")04$res" | xxd -p -r
+	send_packet "04" "$res"
 	log "sent spawnplayer"
 }
 
@@ -181,7 +181,7 @@ function pkt_position() {
 	res+="$(to_short $deltaY)"
 	res+="$(to_short $deltaZ)" 
 	res+="00" # on ground
-	echo -n "$(hexpacket_len "$res")29$res" | xxd -p -r
+	send_packet "29" "$res"
 }
 
 # pkt_chatmessage(msg, sender_uuid)
@@ -195,8 +195,8 @@ function pkt_chatmessage() {
 	res="$(str_len "$json")$(echo -n "$json" | xxd -p)"
 	res+="00" # position: chat box
 	res+="$2"
-	
-	echo -n "$(hexpacket_len "$res")0F$res" | xxd -p -r	
+
+	send_packet "0f" "$res"
 }
 
 # pkt_title(msg)
@@ -204,7 +204,7 @@ function pkt_title() {
 	local txt
 	txt='{"text":"'"$1"'"}'
 	res="$(str_len "$txt")$(echo -n "$txt" | xxd -p)"
-	echo -n "$(hexpacket_len "$res")5a$res" | xxd -p -r
+	send_packet "5a" "$res"
 }
 
 # pkt_subtitle(msg)
@@ -212,14 +212,14 @@ function pkt_subtitle() {
 	local txt
 	txt='{"text":"'"$1"'"}'
 	res="$(str_len "$txt")$(echo -n "$txt" | xxd -p)"
-	echo -n "$(hexpacket_len "$res")58$res" | xxd -p -r
+	send_packet "58" "$res"
 }
 
 # pkt_disconnect(reason)
 function pkt_disconnect() {
 	txt='{"text":"'"$1"'"}'
 	res="$(str_len "$txt")$(echo -n "$txt" | xxd -p)"
-	echo -n "$(hexpacket_len "$res")1a$res" | xxd -p -r
+	send_packet "1a" "$res"
 	
 	pkill -P $$
 	pkt_chatmessage "- $nick" "00000000000000000000000000000000" > $TEMP/players/$nick/broadcast
@@ -233,7 +233,7 @@ function pkt_experience() {
 	res="00000000" # experience bar
 	res+="$(int2varint $1)"
 	res+="00"
-	echo -n "$(hexpacket_len "$res")51$res" | xxd -p -r
+	send_packet "51" "$res"
 }
 
 # pkt_inventory(items)
@@ -252,7 +252,7 @@ function pkt_inventory() {
 	done
 	res+="01 00 01 00"
 
-	echo -n "$(hexpacket_len "$res")14$res" | xxd -p -r
+	send_packet "14" "$res"
 	log "sent inventory"
 }
 
@@ -262,7 +262,7 @@ function pkt_diggingack() {
 	res+="$4"
 	res+="$5"
 	res+="01"
-	echo -n "$(hexpacket_len "$res")08$res" | xxd -p -r
+	send_packet "08" "$res"
 	log "sent dig ack"
 }
 
@@ -271,7 +271,8 @@ function pkt_blockbreak() {
 	res="$(int2varint $((0x$eid)))"
 	res+="$(encode_position $1 $2 $3)"
 	res+="$4"
-	echo -n "$(hexpacket_len "$res")09$res" | xxd -p -r
+
+	send_packet "09" "$res"
 }
 
 # pkt_soundeffect(x, y, z, id)
@@ -285,7 +286,7 @@ function pkt_soundeffect() {
 	res+="3f800000" # volume
 	res+="3f800000" # pitch
 
-	echo -n "$(hexpacket_len "$res")5d$res" | xxd -p -r
+	send_packet "5d" "$res"
 	log "sound $(hexpacket_len "$res")5d$res"
 }
 
@@ -293,6 +294,11 @@ function pkt_soundeffect() {
 function pkt_sendblock() {
 	res="$(encode_position $1 $2 $3)"
 	res+="$(int2varint $4)"
-	
-	echo -n "$(hexpacket_len "$res")0c$res" | xxd -p -r
+
+	send_packet "0c" "$res"
+}
+
+# send_packet(id, payload)
+function send_packet() {
+	echo -n "$(hexpacket_len "$2")$1$2" | unhex
 }

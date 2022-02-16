@@ -17,5 +17,5 @@ function hexlog() {
 	echo -n "$@" | xxd >&2	
 }
 function rhexlog() {
-	echo -n "$@" | xxd -p -r | xxd >&2		
+	echo -n "$@" | unhex | xxd >&2		
 }

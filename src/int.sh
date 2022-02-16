@@ -79,7 +79,7 @@ function packet_len() {
 
 # hexpacket_len(hexpacket)
 function hexpacket_len() {
-	int2varint $((($(echo -n "$1" | xxd -p -r | wc -c)+1)))
+	int2varint $((($(echo -n "$1" | unhex | wc -c)+1)))
 }
 
 # str_len(string)
@@ -89,7 +89,7 @@ function str_len() {
 
 # hexstrl_len(hexstring)
 function hexstr_len() {
-	int2varint $(echo -n "$1" | xxd -p -r | wc -c)
+	int2varint $(echo -n "$1" | unhex | wc -c)
 }
 
 # hex2bin(hexstring)

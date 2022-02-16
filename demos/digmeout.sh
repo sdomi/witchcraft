@@ -160,7 +160,7 @@ function hook_move() {
 	if [[ ${pos[1]} -lt -96 ]]; then
 		# utf-8 is actually only valid for strings created in the UTF world region
 		# everything else is just sparkling unicode
-		pkt_disconnect "$(xxd -p -r <<< "c2af5c5c5f28e38384295f2fc2af")"
+		pkt_disconnect "$(unhex <<< "c2af5c5c5f28e38384295f2fc2af")"
 	fi
 }
 
@@ -171,7 +171,7 @@ function hook_keepalive() {
 function hook_ping() {
 	json='{"version":{"name":"1.18.1","protocol":757},"players":{"max":1,"online":0,"sample":[]},"description":{"text":"Minigame: §adigmeout§r | '"$time_left"' seconds per game"},"favicon":"data:image/png;base64,'"$(base64 -w0 icon.png)"'"}'
 	res="$(str_len "$json")$(echo -n "$json" | xxd -p)"
-	echo "$(hexpacket_len "$res")00$res" | xxd -p -r
+	send_packet "00" "$res"
 }
 
 function hook_inventory() {

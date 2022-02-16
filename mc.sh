@@ -25,14 +25,14 @@ function keep_alive() {
 	while true; do
 		sleep 1
 		log "sending keepalive"
-		echo '092100000000000000ff' | xxd -p -r
+		echo '092100000000000000ff' | unhex
 		# random data
 
 		#res=$(printf '%016x' $time)
 		#res=$res$res
 		#log time: $res
 		#time=$((time+240))
-		#echo -n "$(hexpacket_len "$res")59$res" | xxd -p -r
+		#echo -n "$(hexpacket_len "$res")59$res" | unhex
 	done
 }
 
@@ -120,7 +120,7 @@ while true; do
 
 			state=''
 		elif [[ "$state" == '02' ]]; then
-			nick=$(cut -c 5- <<< "$a" | xxd -p -r | grep -Poh '[A-Za-z0-9_-]*')
+			nick=$(cut -c 5- <<< "$a" | unhex | grep -Poh '[A-Za-z0-9_-]*')
 			eid=$(printf "%04x" $RANDOM | cut -c 1-4)
 			mkdir -p $TEMP/players/$nick
 			echo -n $eid > $TEMP/players/$nick/eid
@@ -132,7 +132,7 @@ while true; do
 
 				# random uuid						string len		string (nick)
 			res="0000000000000000000000000000$eid$(str_len "$nick")$(echo -n "$nick" | xxd -p)"
-			echo -n "$(hexpacket_len "$res")02$res" | xxd -p -r
+			send_packet "02" "$res"
 
 			res="0100$eid" 			# entity id
 			res+="00" 				# not hardcore
@@ -156,13 +156,12 @@ while true; do
 			res+="00"				# is debug (surprisingly, no)
 			res+="01"				# is flat (yeah, sure)
 
-
-			echo -n "$(hexpacket_len "$res")26$res" | xxd -p -r
+			send_packet "26" "$res"
 			log "sent join game"			
 			#res="$(encode_position 10 10 10)"
 			#res+="00000000" # angle as float
 
-			#echo -n "$(hexpacket_len "$res")4B$res" | xxd -p -r
+			#echo -n "$(hexpacket_len "$res")4B$res" | unhex
 			#log "sent spawn position"
 
 			hook_inventory
@@ -183,7 +182,7 @@ while true; do
 		fi
 	elif [[ $a == "01"* ]]; then
 		log "responding to 01"
-		echo "$len$a" | xxd -p -r
+		echo "$len$a" | unhex
 		log "bye"
 		exit
 	elif [[ $a == "0f"* ]]; then
@@ -211,9 +210,9 @@ while true; do
 		hook_block
 	elif [[ $a == "03"* ]]; then
 		if [[ $((0x$(cut -c 3-4 <<< "$a"))) -lt 127 ]]; then # lazy varint check
-			msg=$(cut -c 5- <<< "$a" | xxd -p -r)
+			msg=$(cut -c 5- <<< "$a" | unhex)
 		else
-			msg=$(cut -c 3- <<< "$a" | xxd -p -r)
+			msg=$(cut -c 3- <<< "$a" | unhex)
 		fi
 		hook_chat		
 	else
