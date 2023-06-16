@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Level 4 Menger sponge for Witchcraft, by @hornc 2023.
 
 spawn_pos=(5 0 5)
 
