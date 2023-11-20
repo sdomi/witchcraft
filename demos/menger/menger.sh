@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Level 4 Menger sponge for Witchcraft, by @hornc 2023.
+# Level 3 Menger sponge for Witchcraft, by @hornc 2023.
 
 spawn_pos=(5 0 5)
 
@@ -27,7 +27,7 @@ function cnk() {
 }
 
 function hook_chunks() {
-	# Build Level 4 (27x27x27) sponge:
+	# Build Level 3 (27x27x27) sponge:
 	n="N9V9V9VN /g;s/N/"
 	o=" TVT3V TVTUVU3V UVUTVT3V TVT "
 	a="N3TVT3UVU3TVTN /g;s/N/9T9U9T /g"
